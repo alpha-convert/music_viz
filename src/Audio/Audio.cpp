@@ -1,10 +1,11 @@
 #include "Audio.h"
+#include <libkern/OSByteOrder.h>
 Audio::Audio(){
 	if (!SDL_WasInit(SDL_INIT_AUDIO)) {
 		SDL_Init(SDL_INIT_AUDIO);
 	}
 
-	auto open_success = Mix_OpenAudio(frequency,MIX_DEFAULT_FORMAT,channels,chunksize);
+	auto open_success = Mix_OpenAudio(frequency,AUDIO_S16SYS,channels,chunksize);
 	if(open_success <  0){
 		printf("Error opening audio: %s\n",Mix_GetError());
 	}

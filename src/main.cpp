@@ -22,7 +22,8 @@ typedef struct VisData{
 	Graphics *g_ptr;
 } VisData;
 
-Uint32 ScreenUpdateRequestCallback(Uint32 interval, void *param)
+//S
+uint32_t ScreenUpdateRequestCallback(Uint32 interval, void *param)
 {
 	SDL_Event event;
 	SDL_UserEvent userevent;
@@ -39,30 +40,38 @@ Uint32 ScreenUpdateRequestCallback(Uint32 interval, void *param)
 	return(interval);
 }
 
+//https://www.libsdl.org/projects/SDL_mixer/docs/demos/sdlwav.c
+//What evil person writes code like that
 void GraphicsCallback(void *udata, uint8_t *dstream, int len){
+	//Grab some stuff
 	auto data = (VisData *)udata;
 	auto g = data->g_ptr;
 	auto request_draw= data->request_draw;
 
-	uint8_t prev_val;
+	uint16_t *raw = (uint16_t *) dstream;
+	len = len/2;
 
+	//If we have g, and there's a request to draw, draw the stuff
 	if(g != nullptr && request_draw){
-		for(int index = 1; index < (len - 1); ++index){
-			prev_val = dstream[index - 1];
-			uint16_t new_val = dstream[index];
+		auto w = g->width;
+		auto h = g->height;
+		for(int index = 1; index < len; index = index + 2){
+			int8_t prev_val = dstream[index - 2];
+			int8_t new_val = dstream[index];
 
-			float pos_along = static_cast<float>(index)/static_cast<float>(len);
+			float ppa = static_cast<float>(index - 2)/static_cast<float>(len);
+			float npa = static_cast<float>(index)/static_cast<float>(len);
 
-			g->PutPixel(g->width * pos_along,g->height/2 - new_val,Color::Black);
+			g->Line(w * ppa, prev_val + h/2,w * npa, new_val + h/2,Color::Black);
 		}
 	}
+	//The draw request has been satisfied, and now we signal that the new draw needs to be updated to the screen
 	data->request_draw = false;
 	data->request_update= true;
 }
 
 int main(int argc, char** argv){
-	auto name = "assets/watchtower.wav";
-	//auto name = argv[1] ? argv[1] : "WIndow";
+	auto name = argv[1] ? argv[1] : "No song";
 	Graphics g(w,h,name);
 	Audio a;
 
@@ -75,10 +84,9 @@ int main(int argc, char** argv){
 	vis.request_draw = false;
 
 	uint32_t anim_frame_delay = 10;  /* To round it down to the nearest 10 ms */
-	auto callback_timer = SDL_AddTimer(anim_frame_delay, ScreenUpdateRequestCallback, (void*)&vis);
+	auto callback_timer = SDL_AddTimer(anim_frame_delay, ScreenUpdateRequestCallback, NULL);
 
 	Mix_SetPostMix(GraphicsCallback, (void *)&vis);
-
 
 	uint16_t angle = 0;
 
@@ -91,14 +99,18 @@ int main(int argc, char** argv){
 				running = false;
 			}
 			if(e.type == SDL_USEREVENT){
+				//Bing bing bing! Timer went off.
+				//Can I get a draw please?
 				vis.request_draw = true;
-				if(vis.request_update){
-					g.Clear();
-					g.Update();
-					vis.request_update = false;
-				}
 			}
 		}
+		//The audio callback has signaled that it's done drawing and that I should probably draw to the screen
+		if(vis.request_update){
+			g.Clear();
+			g.Update();
+			vis.request_update = false;
+		}
+
 
 	}
 

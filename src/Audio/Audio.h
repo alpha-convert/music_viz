@@ -21,8 +21,8 @@ public:
 	~Audio();
 private:
 	static constexpr unsigned int frequency = 44100;
-	static constexpr unsigned int channels = 2;
-	static constexpr unsigned int chunksize = 2048;
+	static constexpr unsigned int channels = 1;
+	static constexpr unsigned int chunksize = 1024;
 
 	Mix_Music *bg_music;
 	const char* bg_music_fname;
