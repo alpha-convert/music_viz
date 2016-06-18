@@ -12,10 +12,12 @@
 #include "Graphics.h"
 #include "Audio.h"
 #include "Color.h"
+#include "Visualizer.h"
 
 constexpr unsigned int w = 1920/2;
 constexpr unsigned int h = 1080/2;
 
+/*
 typedef struct VisData{
 	bool request_draw;
 	bool request_update;
@@ -69,27 +71,13 @@ void GraphicsCallback(void *udata, uint8_t *dstream, int len){
 	data->request_draw = false;
 	data->request_update= true;
 }
+*/
 
 int main(int argc, char** argv){
-	auto name = argv[1] ? argv[1] : "No song";
+	const char *name = argv[1] ? argv[1] : "No song";
 	Graphics g(w,h,name);
-	Audio a;
 
-	a.SetBgMusic(name);
-	a.StartBgMusic();
-
-	VisData vis;
-	vis.g_ptr = &g;
-	vis.request_update = false;
-	vis.request_draw = false;
-
-	uint32_t anim_frame_delay = 10;  /* To round it down to the nearest 10 ms */
-	auto callback_timer = SDL_AddTimer(anim_frame_delay, ScreenUpdateRequestCallback, NULL);
-
-	Mix_SetPostMix(GraphicsCallback, (void *)&vis);
-
-	uint16_t angle = 0;
-
+	Visualizer vis(&g,name,name);
 
 	SDL_Event e;
 	bool running =  true;
@@ -98,17 +86,10 @@ int main(int argc, char** argv){
 			if(e.type == SDL_QUIT || e.window.event == SDL_WINDOWEVENT_CLOSE){
 				running = false;
 			}
-			if(e.type == SDL_USEREVENT){
-				//Bing bing bing! Timer went off.
-				//Can I get a draw please?
-				vis.request_draw = true;
-			}
-		}
-		//The audio callback has signaled that it's done drawing and that I should probably draw to the screen
-		if(vis.request_update){
-			g.Clear();
-			g.Update();
-			vis.request_update = false;
+			vis.HandleEvent(e);
+	}
+		if(vis.WaitingForWindowUpdate()){
+			vis.UpdateWindow();
 		}
 
 
