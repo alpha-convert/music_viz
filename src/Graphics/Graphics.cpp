@@ -43,15 +43,11 @@ Graphics::Graphics(uint32_t width, uint32_t height, const char *name) {
 
 
 	SDL_SetRenderDrawBlendMode(renderer,SDL_BLENDMODE_BLEND);
-
-
 }
 
 void Graphics::Clear() {
 	SetColor(Color::White);
-	if(renderer != nullptr){
-		SDL_RenderClear(this->renderer);
-	}
+	SDL_RenderClear(this->renderer);
 }
 
 void Graphics::Update() {
