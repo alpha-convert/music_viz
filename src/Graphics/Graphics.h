@@ -93,6 +93,8 @@ class Graphics {
 		 */
 		void Clear();
 
+		SDL_Renderer *getRenderer();
+
 		/**
 		 * @brief Draw line such that (0,0) is the center of the screen
 		 * @param x1 x component of endpoint 1
@@ -126,6 +128,8 @@ class Graphics {
 		 * @param c color of the line to be drawn
 		 */
 		void Line(int32_t x1, int32_t y1, int32_t x2, int32_t y2, const Color &c);
+
+		void Rect(int32_t x, int32_t y, int32_t w, int32_t h, const Color &c);
 
 		/**
 		 * @brief Draw a pixel at (x,y)

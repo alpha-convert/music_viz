@@ -4,6 +4,12 @@ Visualizer::Visualizer(Graphics *g, const char* fname){
 	this->fname = fname;
 	this->songname = fname;
 
+	auto gutter = 30;
+	box_width = g->width - 2*gutter;
+	box_height= g->height/2 + g->height/4;
+	box_x = gutter;
+	box_y = gutter;
+
 	request_draw = false;
 	request_update = false;
 
@@ -35,15 +41,34 @@ Visualizer::Visualizer(Graphics *g, const char* fname){
 	Mix_VolumeMusic(MIX_MAX_VOLUME);
 	volume = Mix_VolumeMusic(-1);
 
+
+
+	if(!TTF_WasInit() && TTF_Init()==-1) {
+		printf("TTF_Init: %s\n", TTF_GetError());
+	}
+
+	text_font_30 = TTF_OpenFont("assets/droid.ttf", 30);
+	text_font_24 = TTF_OpenFont("assets/droid.ttf", 24);
+	text_font_14 = TTF_OpenFont("assets/droid.ttf", 14);
+	text_font_12 = TTF_OpenFont("assets/droid.ttf", 12);
+
 }
 Visualizer::~Visualizer(){
 	Mix_CloseAudio();
+	TTF_CloseFont(text_font_30);
+	TTF_CloseFont(text_font_24);
+	TTF_CloseFont(text_font_14);
+	TTF_CloseFont(text_font_12);
 	Mix_Quit();
 }
 
 uint32_t Visualizer::ScreenUpdateRequestCallback(uint32_t interval, void* param){
+	//This method looks sorta wierd, but here's what it does.
+	//It snags the pseudo-this out of the custom callback param for future use
 	auto _this = (Visualizer *) param;
 	USE(_this);
+
+	//Creates an event
 	SDL_Event event;
 	SDL_UserEvent userevent;
 
@@ -55,10 +80,12 @@ uint32_t Visualizer::ScreenUpdateRequestCallback(uint32_t interval, void* param)
 	event.type = SDL_USEREVENT;
 	event.user = userevent;
 
+	//Pushes that event onto the event queue
+	//The event loop in main() will snag this event, and signal to the window that it's ready
+	//for the next round.                                                         
 	SDL_PushEvent(&event);
 	return(interval);
 }
-
 void Visualizer::AudioDrawRequestCallback(void *udata, uint8_t *dstream, int len){
 	Visualizer * _this = (Visualizer *)udata;
 	//Grab some stuff
@@ -66,36 +93,39 @@ void Visualizer::AudioDrawRequestCallback(void *udata, uint8_t *dstream, int len
 	//If we have g, and there's a request to draw, draw the stuff
 	if(_this->g != nullptr && _this->request_draw){
 		auto g = _this->g;
-		auto w = g->width;
-		auto h = g->height;
-		//This format is so wierd
+
 		int8_t prior_left = 0;
 		int16_t prior_right = 0;
-		for(int index = 1; index < len; index = index + 4){
+
+		//Starts at 5,
+		//Stride 4, begins at 1, need to go one ahead for (index - 4) to be > 0
+		for(int index = 5; index < len; index = index + 4){
 			//Grab the value out of the left and right channels;
 			int8_t left = *(dstream + index);
 			int8_t right = *(dstream + index + 2);
 
-			//Figure out how car along the screen we are
+			//Figure out how far along the buffer we are
 			float ppa = static_cast<float>(index - 4)/static_cast<float>(len);
 			float npa = static_cast<float>(index)/static_cast<float>(len);
 
 			//Left and right vertial offsets;
-			auto left_va = h/4;
-			auto right_va = 3*h/4;
+			auto left_va = _this->box_height/4;
+			auto right_va = 3*_this->box_height/4;
 
 			//Draw the line pieces.
-			g->Line(w * ppa,
-					prior_left + left_va,
-					w * npa, 
-					left + left_va,
-					Color::Black);
+			auto l_x0 = _this->box_x + _this->box_width * ppa;
+			auto l_y0 = _this->box_y + prior_left + left_va;
+			auto l_x1 = _this->box_x + _this->box_width * npa;
+			auto l_y1 = _this->box_y + left + left_va;
 
-			g->Line(w * ppa,
-					prior_right + right_va,
-					w * npa, 
-					right + right_va,
-					Color::Black);
+			g->Line(l_x0,l_y0,l_x1,l_y1,Color::Black);
+
+			auto r_x0 = _this->box_x + _this->box_width * ppa;
+			auto r_y0 = _this->box_y + prior_right+ right_va;
+			auto r_x1 = _this->box_x + _this->box_width * npa;
+			auto r_y1 = _this->box_y + right + right_va;
+
+			g->Line(r_x0,r_y0,r_x1,r_y1,Color::Black);
 
 			prior_left = left;
 			prior_right = right;
@@ -112,8 +142,41 @@ bool Visualizer::WaitingForWindowUpdate(){
 	return request_update;
 }
 
+void Visualizer::Text(TTF_Font *font, const char *strbuf, unsigned int x, unsigned int y, const Color &c = Color::Black){
+	SDL_Color s_c;
+	s_c.r = c.r*255;
+	s_c.g = c.g*255;
+	s_c.b = c.b*255;
+	s_c.a = c.a*255;
+	auto text_surface = TTF_RenderText_Blended(font, strbuf, s_c);
+	auto text_texture = SDL_CreateTextureFromSurface(g->getRenderer(), text_surface); 
+
+	int text_width;
+	int text_height;
+	auto err = TTF_SizeText(font, strbuf, &text_width, &text_height);
+	assert(err == 0);
+
+	SDL_Rect container; 
+	container.x = x;  
+	container.y = y; 
+	container.w = text_width;
+	container.h = text_height;
+
+	SDL_RenderCopy(g->getRenderer(), text_texture, NULL, &container);
+
+	SDL_FreeSurface(text_surface);
+	SDL_DestroyTexture(text_texture);
+
+}
+
+
+void Visualizer::RenderGui(void){
+	g->Rect(box_x,box_y,box_width,box_height,Color::Black);
+}
+
 void Visualizer::UpdateWindow(){
 	g->Clear();
+	RenderGui();
 	g->Update();
 	request_update = false;
 }

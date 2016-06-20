@@ -16,11 +16,11 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2_mixer/SDL_mixer.h>
+#include <SDL2_ttf/SDL_ttf.h>
 
 #include "Graphics.h"
 #include "Audio.h"
 #include "Color.h"
-
 
 #define UPDATE_CODE		0xF1
 
@@ -29,8 +29,8 @@ public:
 	Visualizer(Graphics *_g, const char* fname);
 	~Visualizer();
 
-	bool WaitingForWindowUpdate();
-	void UpdateWindow();
+	bool WaitingForWindowUpdate(void);
+	void UpdateWindow(void);
 	void HandleEvent(SDL_Event e);
 	void ChangeSong(const char* fname);
 	
@@ -58,6 +58,14 @@ private:
 
 	SDL_TimerID callback_timer;
 
+	TTF_Font *text_font_30;
+	TTF_Font *text_font_24;
+	TTF_Font *text_font_14;
+	TTF_Font *text_font_12;
+
 	static uint32_t ScreenUpdateRequestCallback(uint32_t interval, void* param);
 	static void 	AudioDrawRequestCallback(void *udata, uint8_t *dstream, int len);
+
+	void RenderGui(void);
+	void Text(TTF_Font *font, const char *strbuf, unsigned int x, unsigned int y, const Color &c);
 };

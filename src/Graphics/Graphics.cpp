@@ -99,6 +99,16 @@ void Graphics::Line(int32_t x1, int y1, int x2, int y2, const Color &c){
 	lines_to_draw.push_back(r);
 }
 
+void Graphics::Rect(int32_t x, int32_t y, int32_t w, int32_t h, const Color &c){
+	DeferredRenderRect drr;
+	drr.r.x = x;
+	drr.r.y = y;
+	drr.r.w = w;
+	drr.r.h = h;
+	drr.c = c;
+	rects_to_draw.push_back(drr);
+}
+
 void Graphics::PutPixel(int32_t x, int32_t y, const Color &c) {
 	if (!(x > this->width && x < 0 && y > this->height && y < 0)) {
 		DeferredRenderPoint p;
@@ -212,3 +222,7 @@ void Graphics::Polygon(const std::vector<Vertex>& poly, const Color& c, const st
 	}
 }
 
+
+SDL_Renderer *Graphics::getRenderer(){
+	return renderer;
+}
