@@ -139,6 +139,7 @@ Color Graphics::SDLColorToColor(uint32_t n) const {
 
 //https://github.com/ssloy/tinyrenderer/wiki/Lesson-2:-Triangle-rasterization-and-back-face-culling
 void Graphics::Triangle(const std::array<Vec3,3>& tri, const Color& c, const Color &fill) {
+	USE(fill);
 /*
 	std::array<Vec4,3> corrected = tri;
 	(void) fill;
@@ -209,7 +210,7 @@ void Graphics::Polygon(const std::vector<Vertex>& poly, const Color& c, const Qu
 	}
 }
 
-void Graphics::Polygon(const std::vector<Vertex>& poly, const Color& c, const std::function<Vec4(Vec4)> transform){
+void Graphics::Polygon(const std::vector<Vertex>& poly, const Color& c, const std::function<Vec4(Vec4)> &transform){
 	auto post_transform = poly;
 	for(auto& vert : post_transform){
 		vert.pos = transform(vert.pos);

@@ -18,6 +18,8 @@
 #include <SDL2_mixer/SDL_mixer.h>
 #include <SDL2_ttf/SDL_ttf.h>
 
+#include <boost/format.hpp>
+
 #include "Graphics.h"
 #include "Audio.h"
 #include "Color.h"
@@ -33,6 +35,8 @@ public:
 	void UpdateWindow(void);
 	void HandleEvent(SDL_Event e);
 	void ChangeSong(const char* fname);
+
+	std::string FormattedSongTime();
 	
 private:
 	Graphics *g;
@@ -51,17 +55,19 @@ private:
 	unsigned int box_y;
 
 	unsigned int volume;
+	unsigned int song_pos;
 
 	Mix_Music *song;
-	const char *songname;
 	const char *fname;
+	std::string song_name;
+	std::string artist;
 
 	SDL_TimerID callback_timer;
 
-	TTF_Font *text_font_30;
+//	TTF_Font *text_font_30;
 	TTF_Font *text_font_24;
-	TTF_Font *text_font_14;
-	TTF_Font *text_font_12;
+//	TTF_Font *text_font_14;
+//	TTF_Font *text_font_12;
 
 	static uint32_t ScreenUpdateRequestCallback(uint32_t interval, void* param);
 	static void 	AudioDrawRequestCallback(void *udata, uint8_t *dstream, int len);

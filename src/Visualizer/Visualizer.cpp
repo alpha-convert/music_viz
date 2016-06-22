@@ -1,8 +1,9 @@
 #include "Visualizer.h"
-Visualizer::Visualizer(Graphics *g, const char* fname){
-	this->g = g;
-	this->fname = fname;
-	this->songname = fname;
+Visualizer::Visualizer(Graphics *g, const char* fname) : g(g), fname(fname), song_name(""), artist(""){
+//	this->g = g;
+//	this->fname = fname;
+//	this->song_name = "";
+//	this->artist = "Jimmy Bob James";
 
 	auto gutter = 30;
 	box_width = g->width - 2*gutter;
@@ -47,18 +48,18 @@ Visualizer::Visualizer(Graphics *g, const char* fname){
 		printf("TTF_Init: %s\n", TTF_GetError());
 	}
 
-	text_font_30 = TTF_OpenFont("assets/droid.ttf", 30);
+	//	text_font_30 = TTF_OpenFont("assets/droid.ttf", 30);
 	text_font_24 = TTF_OpenFont("assets/droid.ttf", 24);
-	text_font_14 = TTF_OpenFont("assets/droid.ttf", 14);
-	text_font_12 = TTF_OpenFont("assets/droid.ttf", 12);
+	//	text_font_14 = TTF_OpenFont("assets/droid.ttf", 14);
+	//	text_font_12 = TTF_OpenFont("assets/droid.ttf", 12);
 
 }
 Visualizer::~Visualizer(){
 	Mix_CloseAudio();
-	TTF_CloseFont(text_font_30);
+	//	TTF_CloseFont(text_font_30);
 	TTF_CloseFont(text_font_24);
-	TTF_CloseFont(text_font_14);
-	TTF_CloseFont(text_font_12);
+	//	TTF_CloseFont(text_font_14);
+	//	TTF_CloseFont(text_font_12);
 	Mix_Quit();
 }
 
@@ -66,7 +67,9 @@ uint32_t Visualizer::ScreenUpdateRequestCallback(uint32_t interval, void* param)
 	//This method looks sorta wierd, but here's what it does.
 	//It snags the pseudo-this out of the custom callback param for future use
 	auto _this = (Visualizer *) param;
-	USE(_this);
+	if(!_this->paused){
+		_this->song_pos += anim_frame_delay;
+	}
 
 	//Creates an event
 	SDL_Event event;
@@ -168,9 +171,34 @@ void Visualizer::Text(TTF_Font *font, const char *strbuf, unsigned int x, unsign
 	SDL_DestroyTexture(text_texture);
 
 }
+//This is really sketchy. Found on SO, writes to c_str()... Maybe replace later. But it works for now.
+std::string string_format(const std::string fmt_str, ...) {
+	int final_n, n = ((int)fmt_str.size()) * 2; /* Reserve two times as much as the length of the fmt_str */
+	std::string str;
+	std::unique_ptr<char[]> formatted;
+	va_list ap;
+	while(1) {
+		formatted.reset(new char[n]); /* Wrap the plain char array into the unique_ptr */
+		strcpy(&formatted[0], fmt_str.c_str());
+		va_start(ap, fmt_str);
+		final_n = vsnprintf(&formatted[0], n, fmt_str.c_str(), ap);
+		va_end(ap);
+		if (final_n < 0 || final_n >= n)
+			n += abs(final_n - n + 1);
+		else
+			break;
+	}
+	return std::string(formatted.get());
+}
 
+std::string Visualizer::FormattedSongTime(){
+	int mins = static_cast<int>(floor(song_pos/60/1000));
+	int secs = song_pos/1000 % 60;
+	return string_format("%02d:%02d",mins,secs);
+}
 
 void Visualizer::RenderGui(void){
+	Text(text_font_24,FormattedSongTime().c_str(),0,0);
 	g->Rect(box_x,box_y,box_width,box_height,Color::Black);
 }
 

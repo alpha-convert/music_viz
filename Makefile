@@ -49,6 +49,9 @@ clean:
 	rm -f $(EXEC) $(OBJS)
 	rm -rf $(DOCS)
 
+check:
+	cppcheck -j 4 --template=gcc --enable=performance,warning,style .
+
 print-%:
 	@echo '$*=$($*)'
 

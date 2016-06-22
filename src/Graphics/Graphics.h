@@ -165,7 +165,7 @@ class Graphics {
 		void Polygon(const std::vector<Vertex>& poly, const Color& c);
 		void Polygon(const std::vector<Vertex>& poly, const Color& c, const Quat& rotation);
 
-		void Polygon(const std::vector<Vertex>& poly, const Color& c, const std::function<Vec4(Vec4)> transform);
+		void Polygon(const std::vector<Vertex>& poly, const Color& c, const std::function<Vec4(Vec4)> &transform);
 
 		virtual ~Graphics();
 
