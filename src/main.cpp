@@ -10,7 +10,6 @@
 #include <SDL2_mixer/SDL_mixer.h>
 
 #include "Graphics.h"
-#include "Audio.h"
 #include "Color.h"
 #include "Visualizer.h"
 
@@ -35,8 +34,6 @@ int main(int argc, char** argv){
 		if(vis.WaitingForWindowUpdate()){
 			vis.UpdateWindow();
 		}
-
-
 	}
 
 	SDL_Quit();

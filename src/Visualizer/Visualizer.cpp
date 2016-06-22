@@ -1,13 +1,9 @@
 #include "Visualizer.h"
 Visualizer::Visualizer(Graphics *g, const char* fname) : g(g), fname(fname), song_name(""), artist(""){
-//	this->g = g;
-//	this->fname = fname;
-//	this->song_name = "";
-//	this->artist = "Jimmy Bob James";
 
 	auto gutter = 30;
-	box_width = g->width - 2*gutter;
-	box_height= g->height/2 + g->height/4;
+	box_width = g->getWidth() - 2*gutter;
+	box_height= g->getHeight()/2 + g->getHeight()/4;
 	box_x = gutter;
 	box_y = gutter;
 
@@ -26,6 +22,8 @@ Visualizer::Visualizer(Graphics *g, const char* fname) : g(g), fname(fname), son
 
 	//Load up the song!!
 	song = Mix_LoadMUS(fname);
+	assert(song != nullptr);
+
 
 	//Play
 	if(!Mix_PlayingMusic()){
@@ -145,32 +143,6 @@ bool Visualizer::WaitingForWindowUpdate(){
 	return request_update;
 }
 
-void Visualizer::Text(TTF_Font *font, const char *strbuf, unsigned int x, unsigned int y, const Color &c = Color::Black){
-	SDL_Color s_c;
-	s_c.r = c.r*255;
-	s_c.g = c.g*255;
-	s_c.b = c.b*255;
-	s_c.a = c.a*255;
-	auto text_surface = TTF_RenderText_Blended(font, strbuf, s_c);
-	auto text_texture = SDL_CreateTextureFromSurface(g->getRenderer(), text_surface); 
-
-	int text_width;
-	int text_height;
-	auto err = TTF_SizeText(font, strbuf, &text_width, &text_height);
-	assert(err == 0);
-
-	SDL_Rect container; 
-	container.x = x;  
-	container.y = y; 
-	container.w = text_width;
-	container.h = text_height;
-
-	SDL_RenderCopy(g->getRenderer(), text_texture, NULL, &container);
-
-	SDL_FreeSurface(text_surface);
-	SDL_DestroyTexture(text_texture);
-
-}
 //This is really sketchy. Found on SO, writes to c_str()... Maybe replace later. But it works for now.
 std::string string_format(const std::string fmt_str, ...) {
 	int final_n, n = ((int)fmt_str.size()) * 2; /* Reserve two times as much as the length of the fmt_str */
@@ -198,14 +170,20 @@ std::string Visualizer::FormattedSongTime(){
 }
 
 void Visualizer::RenderGui(void){
-	Text(text_font_24,FormattedSongTime().c_str(),0,0);
+	//Show the song time
+	g->Text(text_font_24,FormattedSongTime(),30,0);
+	//Draw the box around the waveforms
 	g->Rect(box_x,box_y,box_width,box_height,Color::Black);
 }
 
 void Visualizer::UpdateWindow(){
+	//Clear
 	g->Clear();
+	//render
 	RenderGui();
+	//update
 	g->Update();
+	//Aaand we're done
 	request_update = false;
 }
 
@@ -213,7 +191,8 @@ void Visualizer::HandleEvent(SDL_Event e){
 	if(e.type == SDL_USEREVENT && e.user.code == UPDATE_CODE){
 		request_draw = true;
 	} else if(e.type == SDL_KEYDOWN){
-		if(e.key.keysym.sym == SDLK_SPACE){
+		//Pause?
+		if(e.key.keysym.sym == SDLK_SPACE || e.key.keysym.sym == SDLK_k){
 			if(Mix_PausedMusic()){
 				paused = false;
 				Mix_ResumeMusic();

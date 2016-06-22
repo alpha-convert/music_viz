@@ -21,7 +21,6 @@
 #include <boost/format.hpp>
 
 #include "Graphics.h"
-#include "Audio.h"
 #include "Color.h"
 
 #define UPDATE_CODE		0xF1
@@ -59,6 +58,7 @@ private:
 
 	Mix_Music *song;
 	const char *fname;
+	//Proably shouldn't be mixing std::string and char*, but oh well
 	std::string song_name;
 	std::string artist;
 
@@ -73,5 +73,4 @@ private:
 	static void 	AudioDrawRequestCallback(void *udata, uint8_t *dstream, int len);
 
 	void RenderGui(void);
-	void Text(TTF_Font *font, const char *strbuf, unsigned int x, unsigned int y, const Color &c);
 };

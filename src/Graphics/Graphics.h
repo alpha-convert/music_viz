@@ -9,25 +9,14 @@
 #define GRAPHICS_GRAPHICS_H_
 
 #include <vector>
+#include <string>
 #include <functional>
 #include <cstdint>
 #include <SDL2/SDL.h>
+#include <SDL2_ttf/SDL_ttf.h>
 
-#include "Math/Vec2/Vec2.h"
-#include "Math/Vec3/Vec3.h"
-#include "Math/Vec4/Vec4.h"
-#include "Math/Mat4/Mat4.h"
-#include "Color/Color.h"
-#include "Vertex/Vertex.h"
+#include "Color.h"
 #include "macros.h"
-
-//struct SDL_Window;
-//struct SDL_Surface;
-//struct SDL_Renderer;
-//struct SDL_Texture;
-//struct SDL_Rect;
-//struct SDL_Point;
-//class Color;
 
 /**
  * @class Graphics
@@ -59,18 +48,18 @@ typedef struct DeferredRenderLine{
 	Color c;
 } DeferredRenderLine;
 
+typedef struct DeferredRenderText{
+	int x;
+	int y;
+	TTF_Font *font;
+	Color c;
+	std::string text_str;
+} DeferredRenderText;
+
 class Graphics {
 	public:
 
-		///Width of window
-		uint32_t width;
-		///Height of window
-		uint32_t height;
-
-		float vertical_angle;
-		float horizontal_angle;
-
-		/**
+				/**
 		 * @brief Constructs and opens a window
 		 *
 		 * While very powerful and more user-friendly than OpenGL or D3D, SDL still requires some verbose and tedious setup before you can get to the good stuff.
@@ -105,21 +94,6 @@ class Graphics {
 		void SpaceLine(int32_t x1, int32_t y1, int32_t x2, int32_t y2, const Color &c);
 
 		/**
-		 * @brief Draw a Vec3 to the screen from the origin.
-		 * @param v endpoint of the line
-		 * @param scalar scaling factor of the line. Unit vectors may be mard to see, so passing a larger number here will make it easier to see
-		 */
-		void ProjectVec3(const Vec3 &v, const Color &c, int32_t scalar = 1);
-
-		/**
-		 * @brief Draw a line between v1 and v2
-		 * @param v1 start point of the line
-		 * @param v2 end point of the line
-		 * @param c color of the line to be drawn
-		 */
-		void LineFromVec(const Vec3 &v1, const Vec3 &v2, const Color &c);
-
-		/**
 		 * @brief Draw a line from (x1,y1) to (x2,y2)
 		 * @param x1 x coord for point 1
 		 * @param y1 y coord for point 1
@@ -139,42 +113,35 @@ class Graphics {
 		 */
 		void PutPixel(int32_t x, int32_t y, const Color &c);
 
+		void Text(TTF_Font *font, const std::string &text_str, unsigned int x, unsigned int y, const Color &c = Color::Black);
+
 		/**
 		 * @brief Change the current draw color
 		 * @param c new draw color
 		 */
-		inline void SetColor(const Color &c);
+		inline void setColor(const Color &c);
 
-
-		/**
-		 * @brief Draw a triangle
-		 * @param tri Vertexes of the triangle
-		 * @param c outline color of the triangle to draw
-		 */
-		void Triangle(const std::array<Vec3,3>& tri, const Color& c);
-		/**
-		 * @brief Draw a triangle
-		 * @param tri Vertexes of the triangle
-		 * @param c outline color of the triangle to draw
-		 * @param fill fill color of the triangle to draw
-		 * @warning fill color not implemented
-		 */
-		void Triangle(const std::array<Vec3,3>& tri, const Color& c, const Color &fill);
-
-		//std::transform
-		void Polygon(const std::vector<Vertex>& poly, const Color& c);
-		void Polygon(const std::vector<Vertex>& poly, const Color& c, const Quat& rotation);
-
-		void Polygon(const std::vector<Vertex>& poly, const Color& c, const std::function<Vec4(Vec4)> &transform);
+		unsigned int getWidth() const;
+		unsigned int getHeight() const;
 
 		virtual ~Graphics();
 
 	private:
+		///Width of window
+		unsigned int width;
+		///Height of window
+		unsigned int height;
+
+		float vertical_angle;
+		float horizontal_angle;
+
+
 
 		std::vector<DeferredRenderPoint> points_to_draw;
 		std::vector<DeferredRenderLine> lines_to_draw;
 		std::vector<DeferredRenderRect> rects_to_draw;
 		std::vector<DeferredRenderFilledRect> filled_rects_to_draw;
+		std::vector<DeferredRenderText> text_to_draw;
 		
 		SDL_Window *window;
 		SDL_Renderer *renderer;

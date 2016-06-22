@@ -41,32 +41,62 @@ Graphics::Graphics(uint32_t width, uint32_t height, const char *name) {
 	}
 	assert(renderer!= nullptr);
 
-
 	SDL_SetRenderDrawBlendMode(renderer,SDL_BLENDMODE_BLEND);
 }
 
 void Graphics::Clear() {
-	SetColor(Color::White);
+	setColor(Color::White);
 	SDL_RenderClear(this->renderer);
 }
 
 void Graphics::Update() {
 	for(const auto &p : points_to_draw){
-		SetColor(p.c);
+		setColor(p.c);
 		SDL_RenderDrawPoint(renderer,p.p.x,p.p.y);
 	}
 	for(const auto &r : rects_to_draw){
-		SetColor(r.c);
+		setColor(r.c);
 		SDL_RenderDrawRect(renderer,&r.r);
 	}
 	for(const auto &r : filled_rects_to_draw){
-		SetColor(r.c);
+		setColor(r.c);
 		SDL_RenderFillRect(renderer,&r.r);
 	}
 	for(const auto &l : lines_to_draw){
-		SetColor(l.c);
+		setColor(l.c);
 		SDL_RenderDrawLine(renderer,l.x1,l.y1,l.x2,l.y2);
 	}
+
+	for(const auto &text : text_to_draw){
+		SDL_Color s_c;
+		s_c.r = text.c.r*255;
+		s_c.g = text.c.g*255;
+		s_c.b = text.c.b*255;
+		s_c.a = text.c.a*255;
+
+		auto text_surface = TTF_RenderText_Blended(text.font, text.text_str.c_str(), s_c);
+		auto text_texture = SDL_CreateTextureFromSurface(renderer,text_surface); 
+		assert(text_surface != nullptr);
+		assert(text_texture != nullptr);
+
+		int text_width;
+		int text_height;
+		auto err = TTF_SizeText(text.font, text.text_str.c_str(), &text_width, &text_height);
+		assert(err == 0);
+
+		SDL_Rect container; 
+		container.x = text.x;  
+		container.y = text.y; 
+		container.w = text_width;
+		container.h = text_height;
+
+		SDL_RenderCopy(getRenderer(), text_texture, NULL, &container);
+
+		SDL_FreeSurface(text_surface);
+		SDL_DestroyTexture(text_texture);
+	}
+
+
 	SDL_UpdateWindowSurface(this->window);
 	SDL_RenderPresent(this->renderer);
 
@@ -74,14 +104,7 @@ void Graphics::Update() {
 	rects_to_draw.clear();
 	filled_rects_to_draw.clear();
 	lines_to_draw.clear();
-}
-
-void Graphics::ProjectVec3(const Vec3 &v, const Color &c, int scalar){
-	this->SpaceLine(0, 0, v.dot(Vec3::I) * scalar, v.dot(Vec3::J) * scalar, c);
-}
-
-void Graphics::LineFromVec(const Vec3 &v1, const Vec3 &v2, const Color &c){
-	this->SpaceLine(v1.x, v1.y, v2.x, v2.y, c);
+	text_to_draw.clear();
 }
 
 void Graphics::SpaceLine(int32_t x1, int32_t y1, int32_t x2, int32_t y2,const Color &c){
@@ -119,12 +142,31 @@ void Graphics::PutPixel(int32_t x, int32_t y, const Color &c) {
 	}
 }
 
+void Graphics::Text(TTF_Font *font, const std::string &text_str, unsigned int x, unsigned int y, const Color &c){
+	DeferredRenderText t;
+	t.font = font;
+	t.x = x;
+	t.y = y;
+	t.c = c;
+	t.text_str= text_str;
+	text_to_draw.push_back(t);
+}
+
+
+unsigned int Graphics::getWidth() const{
+	return width;
+}
+
+unsigned int Graphics::getHeight() const{
+	return height;
+}
+
 Graphics::~Graphics() {
 	SDL_DestroyWindow(window);
 	SDL_DestroyRenderer(this->renderer);
 }
 
-void Graphics::SetColor(const Color &c) {
+void Graphics::setColor(const Color &c) {
 	SDL_SetRenderDrawColor(this->renderer, 255 * c.r, 255 * c.g, 255*c.b, 255*c.a);
 
 }
@@ -136,93 +178,6 @@ Color Graphics::SDLColorToColor(uint32_t n) const {
 	c.b = (n & 0xff00) / 255.0f;
 	return c;
 }
-
-//https://github.com/ssloy/tinyrenderer/wiki/Lesson-2:-Triangle-rasterization-and-back-face-culling
-void Graphics::Triangle(const std::array<Vec3,3>& tri, const Color& c, const Color &fill) {
-	USE(fill);
-/*
-	std::array<Vec4,3> corrected = tri;
-	(void) fill;
-	Mat4 proj = Mat4::Projection();
-
-	for(auto& v : corrected){
-		auto scale = v.z;
-		v = (proj * v) / scale;
-	}
-
-*/
-	auto t0 = tri[0];
-	auto t1 = tri[1];
-	auto t2 = tri[2];
-
-	//sort the three in order
-
-	if (t0.y>t1.y) std::swap(t0, t1); 
-	if (t0.y>t2.y) std::swap(t0, t2); 
-	if (t1.y>t2.y) std::swap(t1, t2); 
-
-	//draw lines
-	LineFromVec(t0,t1,c);
-	LineFromVec(t1,t2,c);
-	LineFromVec(t2,t0,c);
-
-	//get bounding box for rasterizing
-	//nope jk this isn't done
-	//@TODO: Do fills or whatever
-}
-
-void Graphics::Triangle(const std::array<Vec3,3>& tri, const Color& c) {
-	Triangle(tri,c,c);
-}
-
-
-
-void Graphics::Polygon(const std::vector<Vertex>& poly, const Color& c) {
-	std::vector<Vertex> corrected = poly;
-	Mat4 proj = Mat4::Projection();
-
-	for(auto& v : corrected){
-		auto scale = v.pos.z;
-		v.pos = (proj * v.pos) / scale;
-	}
-
-	for(const auto& vertex : poly){
-		for(const auto vert_ref : vertex.adj){
-			this->LineFromVec(vertex.pos,poly[vert_ref].pos,c);
-		}
-	}
-}
-
-
-void Graphics::Polygon(const std::vector<Vertex>& poly, const Color& c, const Quat& rotation) {
-	std::vector<Vertex> corrected = poly;
-	Mat4 proj = Mat4::Projection();
-
-	for(auto& v : corrected){
-		auto scale = v.pos.z;
-		v.pos = (proj * v.pos) / scale;
-	}
-
-	for(const auto& vertex : poly){
-		for(const auto vert_ref : vertex.adj){
-			this->LineFromVec(vertex.pos.rotate(rotation),poly[vert_ref].pos.rotate(rotation),c);
-		}
-	}
-}
-
-void Graphics::Polygon(const std::vector<Vertex>& poly, const Color& c, const std::function<Vec4(Vec4)> &transform){
-	auto post_transform = poly;
-	for(auto& vert : post_transform){
-		vert.pos = transform(vert.pos);
-	}
-
-	for(const auto& vertex : post_transform){
-		for(const auto vert_ref : vertex.adj){
-			this->LineFromVec(vertex.pos,post_transform[vert_ref].pos,c);
-		}
-	}
-}
-
 
 SDL_Renderer *Graphics::getRenderer(){
 	return renderer;
