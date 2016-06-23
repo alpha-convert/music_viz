@@ -131,6 +131,15 @@ void Graphics::Rect(int32_t x, int32_t y, int32_t w, int32_t h, const Color &c){
 	drr.c = c;
 	rects_to_draw.push_back(drr);
 }
+void Graphics::FillRect(int32_t x, int32_t y, int32_t w, int32_t h, const Color &c){
+	DeferredRenderRect drr;
+	drr.r.x = x;
+	drr.r.y = y;
+	drr.r.w = w;
+	drr.r.h = h;
+	drr.c = c;
+	filled_rects_to_draw.push_back(drr);
+}
 
 void Graphics::PutPixel(int32_t x, int32_t y, const Color &c) {
 	if (!(x > this->width && x < 0 && y > this->height && y < 0)) {

@@ -38,11 +38,6 @@ typedef struct DeferredRenderRect{
 	Color c;
 } DeferredRenderRect;
 
-typedef struct DeferredRenderFilledRect{
-	SDL_Rect r;
-	Color c;
-} DeferredRenderFilledRect;
-
 typedef struct DeferredRenderLine{
 	int x1, y1,x2,y2;
 	Color c;
@@ -105,6 +100,8 @@ class Graphics {
 
 		void Rect(int32_t x, int32_t y, int32_t w, int32_t h, const Color &c);
 
+		void FillRect(int32_t x, int32_t y, int32_t w, int32_t h, const Color &c);
+
 		/**
 		 * @brief Draw a pixel at (x,y)
 		 * @param x x coord of the point to draw
@@ -140,7 +137,7 @@ class Graphics {
 		std::vector<DeferredRenderPoint> points_to_draw;
 		std::vector<DeferredRenderLine> lines_to_draw;
 		std::vector<DeferredRenderRect> rects_to_draw;
-		std::vector<DeferredRenderFilledRect> filled_rects_to_draw;
+		std::vector<DeferredRenderRect> filled_rects_to_draw;
 		std::vector<DeferredRenderText> text_to_draw;
 		
 		SDL_Window *window;

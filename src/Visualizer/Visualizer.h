@@ -20,10 +20,12 @@
 
 #include <boost/format.hpp>
 
+#include "Button.h"
 #include "Graphics.h"
 #include "Color.h"
 
-#define UPDATE_CODE		0xF1
+#define UPDATE_CODE			0xF1
+#define PLAY_BUTTON_CODE	0xF2
 
 class Visualizer {
 public:
@@ -58,16 +60,19 @@ private:
 
 	Mix_Music *song;
 	const char *fname;
-	//Proably shouldn't be mixing std::string and char*, but oh well
 	std::string song_name;
 	std::string artist;
 
+	Button pause_button;
+
 	SDL_TimerID callback_timer;
 
-//	TTF_Font *text_font_30;
+//	TTF_Font *text_font_48;
+	TTF_Font *text_font_30;
 	TTF_Font *text_font_24;
 //	TTF_Font *text_font_14;
 //	TTF_Font *text_font_12;
+//
 
 	static uint32_t ScreenUpdateRequestCallback(uint32_t interval, void* param);
 	static void 	AudioDrawRequestCallback(void *udata, uint8_t *dstream, int len);
