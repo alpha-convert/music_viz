@@ -20,8 +20,9 @@ Visualizer::Visualizer(Graphics *g, const char* fname) : g(g), fname(fname), son
 	}
 
 	//Load up the song!!
-	song = Mix_LoadMUS(fname);
-	assert(song != nullptr);
+	if(fname){
+		song = Mix_LoadMUS(fname);
+	}
 
 	//Play
 	if(!Mix_PlayingMusic()){
@@ -103,7 +104,7 @@ void Visualizer::AudioDrawRequestCallback(void *udata, uint8_t *dstream, int len
 		auto g = _this->g;
 
 		int8_t prior_left = 0;
-		int16_t prior_right = 0;
+		int8_t prior_right = 0;
 
 		//Stupid format of how it be
 		std::vector<std::pair<int8_t,int8_t>> sample_data; //L,R
@@ -124,7 +125,6 @@ void Visualizer::AudioDrawRequestCallback(void *udata, uint8_t *dstream, int len
 			//Figure out how far along the buffer we are
 			float ppa = static_cast<float>(index - 1)/static_cast<float>(sample_data.size());
 			float npa = static_cast<float>(index)/static_cast<float>(sample_data.size());
-
 
 			//Left and right vertial offsets;
 			auto left_va = _this->box_height/4;
