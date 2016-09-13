@@ -1,4 +1,17 @@
 #include "Visualizer.h"
+
+//The program flow for this is weird. There are 2 callbacks going at once, and they both depend on
+//each other. The two callbacks do as follows
+//1. Visualization Draw Request Callback (VDRC)
+//   This is called after whenever SDL renews the data in the audio buffer. This gives the program
+//   the oportunity to do any calculations it needs (FFT, effects, etc) and then send the draw calls
+//   to the Graphics object. It then sets the request_screen_update flag, clears the audio draw request,
+//   and returns.
+//2. Screen Update Request Callback (SURC)
+//   This is called 60 times a second to update the screen. It uses the 'diferred rendering' technique
+//   used in the Graphics object to update the screen with the new visualizer lines created in the VDRC.
+//   It then sets the request_audio_draw flag and clears its own.
+
 Visualizer::Visualizer(Graphics *g, const char* fname) : g(g), fname(fname), song_name(""), artist(""){
 	auto gutter = 30;
 	box_width = g->getWidth() - 2*gutter;
@@ -6,10 +19,9 @@ Visualizer::Visualizer(Graphics *g, const char* fname) : g(g), fname(fname), son
 	box_x = gutter;
 	box_y = gutter;
 
-	request_draw = false;
-	request_update = false;
+	request_audio_draw = false;
+	request_screen_update = false;
 
-	//Wew lad let's go
 	if (!SDL_WasInit(SDL_INIT_AUDIO)) {
 		SDL_Init(SDL_INIT_AUDIO);
 	}
@@ -20,9 +32,13 @@ Visualizer::Visualizer(Graphics *g, const char* fname) : g(g), fname(fname), son
 	}
 
 	//Load up the song!!
-	if(fname){
+	if(std::string(fname) != "NO_SONG"){
 		song = Mix_LoadMUS(fname);
-	}
+	} else {
+        printf("No file provided: Error %s\n",fname);
+	    pause_button.toggleState();
+        paused = true;
+    }
 
 	//Play
 	if(!Mix_PlayingMusic()){
@@ -89,18 +105,12 @@ uint32_t Visualizer::ScreenUpdateRequestCallback(uint32_t interval, void* param)
 	return(interval);
 }
 
-void do_effect(std::vector<std::pair<int8_t,int8_t>> &samples){
-	std::transform(samples.begin(),samples.end(),samples.begin(),[](std::pair<int8_t,int8_t> sample){
-			return sample;
-	});
-}
-
 void Visualizer::AudioDrawRequestCallback(void *udata, uint8_t *dstream, int len){
 	Visualizer * _this = (Visualizer *)udata;
 	//Grab some stuff
 
 	//If we have g, and there's a request to draw, draw the stuff
-	if(_this->g != nullptr && _this->request_draw){
+	if(_this->g != nullptr && _this->request_audio_draw){
 		auto g = _this->g;
 
 		int8_t prior_left = 0;
@@ -115,7 +125,6 @@ void Visualizer::AudioDrawRequestCallback(void *udata, uint8_t *dstream, int len
 			sample_data.push_back(p);
 		}
 
-		do_effect(sample_data);
 
 		for(auto it = sample_data.begin() + 1; it < sample_data.end(); ++it){
 			auto index = it - sample_data.begin();
@@ -155,15 +164,15 @@ void Visualizer::AudioDrawRequestCallback(void *udata, uint8_t *dstream, int len
 			sample_data.erase(sample_data.begin());
 		}
 	}
-	//The draw request has been satisfied, and now we signal that the new draw needs to be updated to the screen
 
-	_this->request_draw = false;
-	_this->request_update= true;
+	//The draw request has been satisfied, and now we signal that the new draw needs to be updated to the screen
+	_this->request_audio_draw = false;
+	_this->request_screen_update= true;
 }
 
 
 bool Visualizer::WaitingForWindowUpdate(){
-	return request_update;
+	return request_screen_update;
 }
 
 //This is really sketchy. Found on SO, writes to c_str()... Maybe replace later. But it works for now.
@@ -208,12 +217,12 @@ void Visualizer::UpdateWindow(){
 	g->Clear();
 	RenderGui();
 	g->Update();
-	request_update = false;
+	request_screen_update = false;
 }
 
 void Visualizer::HandleEvent(SDL_Event e){
 	if(e.type == SDL_USEREVENT && e.user.code == UPDATE_CODE){
-		request_draw = true;
+		request_audio_draw = true;
 	} else if(e.type == SDL_KEYDOWN){
 		//Pause?
 		if(e.key.keysym.sym == SDLK_SPACE || e.key.keysym.sym == SDLK_k){
@@ -257,5 +266,6 @@ void Visualizer::ChangeSong(const char* fname){
 	if(!Mix_PlayingMusic()){
 		Mix_PlayMusic(song,-1);
 	}
+    song_pos = 0;
 	Mix_ResumeMusic();
 }

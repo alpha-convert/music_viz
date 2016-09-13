@@ -25,7 +25,7 @@
 #include "Color.h"
 
 #define UPDATE_CODE			0xF1
-#define PLAY_BUTTON_CODE	0xF2
+#define PLAY_BUTTON_CODE	        0xF2
 
 class Visualizer {
 public:
@@ -42,8 +42,8 @@ public:
 private:
 	Graphics *g;
 
-	bool request_draw;
-	bool request_update;
+	bool request_audio_draw;
+	bool request_screen_update;
 	bool paused;
 	static constexpr unsigned int frequency = 44100;
 	static constexpr unsigned int channels = 2;
