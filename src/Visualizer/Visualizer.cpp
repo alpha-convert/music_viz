@@ -12,7 +12,10 @@
 //   used in the Graphics object to update the screen with the new visualizer lines created in the VDRC.
 //   It then sets the request_audio_draw flag and clears its own.
 
-Visualizer::Visualizer(Graphics *g, const char* fname) : g(g), fname(fname), song_name(""), artist(""){
+Visualizer::Visualizer(Graphics *g, const char* fname) : g(g), fname(fname), song_name(""), artist(""),
+    pause_button(Button(30,g->getHeight()-133,300,100,PLAY_BUTTON_CODE,{false,std::string("Pause"),Color::Green},"Play",Color::Red))
+{
+
 	auto gutter = 30;
 	box_width = g->getWidth() - 2*gutter;
 	box_height= g->getHeight()/2 + g->getHeight()/4;
@@ -36,7 +39,6 @@ Visualizer::Visualizer(Graphics *g, const char* fname) : g(g), fname(fname), son
 		song = Mix_LoadMUS(fname);
 	} else {
         printf("No file provided: Error %s\n",fname);
-	    pause_button.toggleState();
         paused = true;
     }
 
@@ -65,7 +67,6 @@ Visualizer::Visualizer(Graphics *g, const char* fname) : g(g), fname(fname), son
 	//	text_font_14 = TTF_OpenFont("assets/droid.ttf", 14);
 	//	text_font_12 = TTF_OpenFont("assets/droid.ttf", 12);
 	
-	pause_button = Button(30,g->getHeight()-133,300,100,PLAY_BUTTON_CODE);
 }
 
 Visualizer::~Visualizer(){
@@ -207,10 +208,10 @@ void Visualizer::RenderGui(void){
 	//Draw the box around the waveforms
 	g->Rect(box_x,box_y,box_width,box_height,Color::Black);
 
-	auto b = pause_button;
-	g->FillRect(b.getX(), b.getY(), b.getWidth(), b.getHeight(), b.getColor());
+    auto b = pause_button;
+    g->FillRect(b.getX(), b.getY(), b.getWidth(), b.getHeight(), b.getColor());
+    g->Text(text_font_30,b.getText(),b.getX() + 50,b.getY() + 30);
 
-	g->Text(text_font_30,b.getText(),b.getX() + 50,b.getY() + 30);
 }
 
 void Visualizer::UpdateWindow(){
@@ -226,7 +227,7 @@ void Visualizer::HandleEvent(SDL_Event e){
 	} else if(e.type == SDL_KEYDOWN){
 		//Pause?
 		if(e.key.keysym.sym == SDLK_SPACE || e.key.keysym.sym == SDLK_k){
-			pause_button.toggleState();
+            pause_button.toggleState();
 			if(Mix_PausedMusic()){
 				paused = false;
 				Mix_ResumeMusic();
@@ -246,15 +247,15 @@ void Visualizer::HandleEvent(SDL_Event e){
 		}
 	} else if(e.type == SDL_MOUSEBUTTONDOWN){
 		auto press = e.button;
-		if(pause_button.mouseInside(press.x,press.y)){
-			pause_button.toggleState();
-			paused = pause_button.getState();
-			if(paused){
-				Mix_PauseMusic();
-			} else {
-				Mix_ResumeMusic();
-			}
-		}
+        if(pause_button.mouseInside(press.x,press.y)){
+                pause_button.toggleState();
+                paused = pause_button.isPressed();
+                if(paused){
+                        Mix_PauseMusic();
+                } else {
+                        Mix_ResumeMusic();
+                }
+        }
 	}
 }
 

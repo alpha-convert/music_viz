@@ -2,6 +2,7 @@
 #include <functional>
 #include <string>
 #include "Color.h"
+#include "Input.h"
 
 /***
 * @Author Joseph Cutler
@@ -10,39 +11,27 @@
 */
 
 
-class Button {
+typedef struct button_state_t {
+        bool pressed;
+        std::string text;
+        Color c;
+} button_state_t;
+
+class Button : public Input<button_state_t>{
 public:
 
 	static constexpr bool Down = true;
 	static constexpr bool Up = false;
 
-	Button(unsigned int x, unsigned int y, unsigned int w, unsigned int h, char code);
+        Button(unsigned int x, unsigned int y, unsigned int w, unsigned int h, char code, button_state_t startingState, const std::string &on_text, const Color &on_color);
 	~Button();
-	Button();
-
-	bool mouseInside(unsigned int mx, unsigned int my) const;
-
-	void setOnState(const std::string &s, const Color &c);
 
 	void toggleState();
+        bool isPressed();
 
-	bool getState() const;
-	char getCode() const;
-	unsigned int getHeight() const;
-	unsigned int getWidth() const;
-	unsigned int getX() const;
-	unsigned int getY() const;
-	std::string getText() const;
+        std::string getText() const;
 	Color getColor() const;
 private:
-	unsigned int x;
-	unsigned int y;
-	unsigned int width;
-	unsigned int height;
-	char code;
-
-	bool state;
-
 	std::string on_text;
 	std::string off_text;
 	Color on_c;

@@ -75,8 +75,11 @@ void Graphics::Update() {
 		s_c.a = text.c.a*255;
 
 		auto text_surface = TTF_RenderText_Blended(text.font, text.text_str.c_str(), s_c);
+        if(!text_surface){
+            printf("Could not make text surface out of %s. Error: %s\n",text.text_str.c_str(),SDL_GetError());
+		    assert(text_surface);
+        }
 		auto text_texture = SDL_CreateTextureFromSurface(renderer,text_surface); 
-		assert(text_surface != nullptr);
 		assert(text_texture != nullptr);
 
 		int text_width;

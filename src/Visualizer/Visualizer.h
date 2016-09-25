@@ -63,15 +63,12 @@ private:
 	std::string song_name;
 	std::string artist;
 
-	Button pause_button;
-
 	SDL_TimerID callback_timer;
 
-//	TTF_Font *text_font_48;
+        Button pause_button;
+
 	TTF_Font *text_font_30;
 	TTF_Font *text_font_24;
-//	TTF_Font *text_font_14;
-//	TTF_Font *text_font_12;
 //
 
 	static uint32_t ScreenUpdateRequestCallback(uint32_t interval, void* param);
