@@ -211,9 +211,13 @@ void Visualizer::RenderGui(void){
     //Draw the box around the waveforms
     g->Rect(box_x,box_y,box_width,box_height,Color::Black);
 
+    //button stuff
     auto b = pause_button;
     g->FillRect(b.getX(), b.getY(), b.getWidth(), b.getHeight(), b.getColor());
     g->Text(text_font_30,b.getText(),b.getX() + 50,b.getY() + 30);
+
+    auto volume_percent = (float) volume / (float) MIX_MAX_VOLUME * 100;
+    g->Text(text_font_24, string_format("Volume: %0.0f%%",floor(volume_percent)), g->getWidth()- 200,0);
 
 }
 
@@ -241,11 +245,13 @@ void Visualizer::HandleEvent(SDL_Event e){
         }
 
         if(e.key.keysym.sym == SDLK_UP) {
-            volume += 2;
+            volume += 1;
+            if(volume > MIX_MAX_VOLUME){volume = MIX_MAX_VOLUME;}
             Mix_VolumeMusic(volume);
         }
         if(e.key.keysym.sym == SDLK_DOWN) {
-            volume -= 2;
+            volume = volume - 1;
+            if(volume < 0){volume = 0;}
             Mix_VolumeMusic(volume);
         }
     } else if(e.type == SDL_MOUSEBUTTONDOWN){

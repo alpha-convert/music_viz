@@ -26,3 +26,4 @@ Color Button::getColor() const{
 bool Button::isPressed(){
     return state.pressed;
 }
+

@@ -1,4 +1,6 @@
 #pragma once
+#include <functional>
+#include <SDL2/SDL.h>
 /***
  * @Author Joseph Cutler
  * @Date September 23, 2016
@@ -8,14 +10,17 @@ template<typename T>
 class Input {
 public:
         Input(unsigned int x, unsigned int y, unsigned int w, unsigned int h, char code, T startingState) : 
-                startingState(startingState), x(x), y(y), width(w), height(h), code(code), state(startingState){};
+                 x(x), y(y), width(w), height(h), code(code), state(startingState), startingState(startingState){}; 
         ~Input(){};
+
+        void setState(std::function<T(T)> f){
+                state = f(state);
+        }
 
         void setState(T newState){
                 state = newState;
         }
 
-        //THIS MIGHT BE BAD. MAYBE NOT CONST REFS?
         T getState(void){
                 return state;
         }
