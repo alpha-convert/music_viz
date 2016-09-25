@@ -16,7 +16,7 @@
 constexpr unsigned int w = 2*1920/3;
 constexpr unsigned int h = 2*1080/3;
 
-int main(int argc, char** argv){
+int main(int, char** argv){
 	const char *name = argv[1] ? argv[1] : "NO_SONG";
 	Graphics g(w,h,name);
 
@@ -35,7 +35,6 @@ int main(int argc, char** argv){
 			vis.UpdateWindow();
 		}
 	}
-
 	SDL_Quit();
 	return 0;
 }

@@ -29,7 +29,7 @@ public:
         }
 
         bool mouseInside(unsigned int mx, unsigned int my) const{
-                auto inx = mx > x && mx < (mx + width);
+                auto inx = mx > x && (mx < (mx + width));
                 auto iny = my > y && my < (my + height);
                 return inx && iny;
         }
