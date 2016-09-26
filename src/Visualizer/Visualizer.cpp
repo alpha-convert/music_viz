@@ -1,5 +1,4 @@
 #include "Visualizer.h"
-
 //The program flow for this is weird. There are 2 callbacks going at once, and they both depend on
 //each other. The two callbacks do as follows
 //1. Visualization Draw Request Callback (VDRC)
@@ -11,7 +10,6 @@
 //   This is called 60 times a second to update the screen. It uses the 'diferred rendering' technique
 //   used in the Graphics object to update the screen with the new visualizer lines created in the VDRC.
 //   It then sets the request_audio_draw flag and clears its own.
-
 Visualizer::Visualizer(Graphics *g, const char* fname) : g(g), fname(fname), song_name(""), artist(""),
     pause_button(Button(30,g->getHeight()-133,300,100,PLAY_BUTTON_CODE,{false,std::string("Pause"),Color::Green},"Play",Color::Red))
 {
@@ -251,7 +249,7 @@ void Visualizer::HandleEvent(SDL_Event e){
         }
         if(e.key.keysym.sym == SDLK_DOWN) {
             volume = volume - 1;
-            if(volume < 0){volume = 0;}
+            if(volume > MIX_MAX_VOLUME){volume = 0;} //this check looks dumb, but it's because of integer overflow.
             Mix_VolumeMusic(volume);
         }
     } else if(e.type == SDL_MOUSEBUTTONDOWN){
